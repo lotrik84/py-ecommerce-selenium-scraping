@@ -86,13 +86,14 @@ def write_to_csv(products: [Product], filename: str) -> None:
 
 
 def get_all_products() -> None:
-    with webdriver.Firefox() as driver:
+    options = webdriver.FirefoxOptions()
+    options.add_argument("-headless")
+    with webdriver.Firefox(options=options) as driver:
 
         for page_name, uri in URIS.items():
             page = click_all_more(driver, uri)
             products = parse_page(page)
             write_to_csv(products, f"{page_name}.csv")
-            print(len(products))
 
 
 if __name__ == "__main__":
