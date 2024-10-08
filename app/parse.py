@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass, fields, astuple
 from time import sleep
 from urllib.parse import urljoin
+from tqdm import tqdm
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -33,11 +34,14 @@ class Product:
 PRODUCT_FIELDS = [field.name for field in fields(Product)]
 
 
-def parse_page(driver: webdriver.Firefox) -> [Product]:
+def parse_page(driver: webdriver.Firefox, page_name: str) -> [Product]:
     elements = driver.find_elements(By.CLASS_NAME, "card")
     products = []
 
-    for element in elements:
+    print(f"Parsing {page_name} page: ")
+    sleep(0.1)  # Fix for tqdm
+
+    for element in tqdm(elements):
         title = element.find_element(By.CLASS_NAME, "title").get_attribute(
             "title"
         )
@@ -92,7 +96,7 @@ def get_all_products() -> None:
 
         for page_name, uri in URIS.items():
             page = click_all_more(driver, uri)
-            products = parse_page(page)
+            products = parse_page(page, page_name)
             write_to_csv(products, f"{page_name}.csv")
 
 
