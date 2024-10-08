@@ -80,7 +80,6 @@ def get_all_products() -> None:
             products = parse_page(page)
             print(len(products))
 
-
         sleep(5)
 
 
