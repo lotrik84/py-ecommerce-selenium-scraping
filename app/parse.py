@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import csv
+from dataclasses import dataclass, fields, astuple
 from time import sleep
 from urllib.parse import urljoin
 
@@ -29,12 +30,17 @@ class Product:
     num_of_reviews: int
 
 
+PRODUCT_FIELDS = [field.name for field in fields(Product)]
+
+
 def parse_page(driver: webdriver.Firefox) -> [Product]:
     elements = driver.find_elements(By.CLASS_NAME, "card")
     products = []
 
     for element in elements:
-        title = element.find_element(By.CLASS_NAME, "title").text
+        title = element.find_element(By.CLASS_NAME, "title").get_attribute(
+            "title"
+        )
         description = element.find_element(By.CLASS_NAME, "description").text
         price = float(
             element.find_element(By.CLASS_NAME, "price").text.replace("$", "")
@@ -56,7 +62,7 @@ def click_all_more(driver: webdriver.Firefox, uri: str) -> webdriver.Firefox:
     try:
         cookies_btn = driver.find_element(By.CLASS_NAME, "acceptCookies")
         cookies_btn.click()
-    except:
+    except Exception:
         pass
 
     try:
@@ -66,10 +72,17 @@ def click_all_more(driver: webdriver.Firefox, uri: str) -> webdriver.Firefox:
         while more_btn.is_displayed():
             more_btn.click()
 
-    except:
+    except Exception:
         pass
 
     return driver
+
+
+def write_to_csv(products: [Product], filename: str) -> None:
+    with open(filename, "w") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(PRODUCT_FIELDS)
+        writer.writerows([astuple(product) for product in products])
 
 
 def get_all_products() -> None:
@@ -78,9 +91,8 @@ def get_all_products() -> None:
         for page_name, uri in URIS.items():
             page = click_all_more(driver, uri)
             products = parse_page(page)
+            write_to_csv(products, f"{page_name}.csv")
             print(len(products))
-
-        sleep(5)
 
 
 if __name__ == "__main__":
